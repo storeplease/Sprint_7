@@ -5,22 +5,16 @@ from methods.courier_methods import CourierMethods
 class TestCreateCourier:
     @allure.title("Тестируем регистрацию аккаунта курьера")
     @allure.step("Тест создания нового курьера")
-    def test_create_courier_success(self, courier_new):
-        courier_data, status_code = courier_new
-        assert status_code == 201 and "ok" in courier_data, f"Expected status code 201, got {status_code} or Response does not contain 'ok'"
-    
-    @allure.step("Тест ошибки создания курьера с теми же данными")
-    def test_create_duplicate_courier(self):
-        courier_methods = CourierMethods()
-        params = courier_methods.generate_courier_params()
-        # Создаем курьера с определенными данными
+    def test_create_courier_success(self, courier_data):
+        courier_methods, params = courier_data
         response_data, status_code = courier_methods.create_courier(params=params)
-        # Пытаемся создать курьера с теми же данными
+        assert status_code == 201 and "ok" in response_data, f"Expected status code 201, got {status_code} or Response does not contain 'ok'"
+
+    @allure.step("Тест ошибки создания курьера с теми же данными")
+    def test_create_duplicate_courier(self, existing_courier):
+        courier_methods, params = existing_courier
         duplicate_response_data, duplicate_status_code = courier_methods.create_courier(params=params)
-        # Логинимся и удаляем первого курьера
-        login_response, _ = courier_methods.login_courier({"login": params["login"], "password": params["password"]})
-        courier_methods.delete_courier(courier_id=login_response["id"])
-        assert duplicate_status_code == 409, f"Expected status code 409 for duplicate courier, got {duplicate_status_code}"
+        assert duplicate_status_code == 409, f"Expected 409, got {duplicate_status_code}"
 
     @allure.step("Тест ошибки создания курьера без обязательного поля")
     def test_create_courier_missing_field(self):
